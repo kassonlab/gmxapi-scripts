@@ -11,7 +11,7 @@ import analysis
 # produces simulation input data bundle (parameters, structure, topology)
 
 N = 50  # Number of ensemble members
-starting_structure = 'input_conf.gro'
+starting_structure = 'input_conf.gro' # Could start with a list of distinct tprs
 topology_file = 'input.top'
 run_parameters = 'params.mdp'
 
@@ -35,7 +35,7 @@ train = gmx.subgraph(input={'conformation': initial_input})
 converge = gmx.subgraph(input={'conformation'})
 
 with train:
-    modified_input = gmx.modify_input(input=lengthened_input,
+    modified_input = gmx.modify_input(input=initial_input,
     structure=train.input.conformation)
     md = gmx.mdrun(input=initial_input)
     potential = gmx.workflow.WorkElement(
