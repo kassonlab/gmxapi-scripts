@@ -66,6 +66,7 @@ with converge:
 
 work = gmx.while_loop(condition=condition, converge)
 
+# Command-line arguments for mdrun can be added to gmx run as below.
 # Settings for a 20 core HPC node. Use 18 threads for domain decomposition for pair potentials
 # and the remaining 2 threads for PME electrostatics.
 gmx.run(work, tmpi=20, grid=[3, 3, 2], ntomp_pme=1, npme=2, ntomp=1)
