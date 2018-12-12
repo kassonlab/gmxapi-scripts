@@ -39,12 +39,17 @@ with subgraph:
     # Get the output trajectories and pass to PyEmma to build the MSM
     # Return a stop condition object that can be used in gmx while loop to
     # terminate the simulation
+    allframes = gmx.commandline_operation('gmx', 'trajcat',
+                                          input={'-f': gmx.gather(md.output.trajectory.file)},
+                                          output={'-o': gmx.OutputFile('.trr')})
+
     adaptive_msm = analysis.msm_analyzer(topfile=editconf.file['-o'],
-        trajectory=md.output.trajectory.file,
+        trajectory=allframes.output.file['-o']
         P=subgraph.P)
     # Update the persistent data for the subgraph
     subgraph.P = adaptive_msm.output.transition_matrix
-    subgraph.conformation = md.output.conformation
+    # adaptive_msm here is responsible for maintaining the ensemble width
+    subgraph.conformation = adaptive_msm.output.conformation
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
