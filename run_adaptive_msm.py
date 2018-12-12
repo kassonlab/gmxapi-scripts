@@ -20,10 +20,9 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
 initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
 
 # We will need a pdb for MSM building in PyEmma
-pdbfile = gmx.OutputFile('.pdb')
 editconf = gmx.commandline_operation('gmx', 'editconf',
     inputs={'-f': starting_structure}
-    output={'-o': pdbfile})  # 'input_conf.pdb'
+    output={'-o': gmx.OutputFile('.pdb')})  # 'input_conf.pdb'
 
 # Get a placeholder object that can serve as a sub context / work graph owner
 # and can be used in a control operation.

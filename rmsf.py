@@ -9,8 +9,7 @@ starting_structure = 'input_conf.gro'
 topology_file = 'input.top'
 run_parameters = 'params.mdp'
 
-initial_tpr = gmx.OutputFile('.tpr')
-gmx.commandline_operation(
+initial_tpr = gmx.commandline_operation(
     'gmx',
     'grompp',
     input={
@@ -18,7 +17,7 @@ gmx.commandline_operation(
         '-c': starting_structure,
         '-p': topology_file
     },
-    output={'-o': initial_tpr})
+    output={'-o': gmx.OutputFile('.tpr')})
 # Note: Before gmx.OutputFile, users still have to manage filenames
 # The above would have `output={'-o': [initial_tpr] * N}`
 
@@ -26,7 +25,7 @@ gmx.commandline_operation(
 # Broadcast to the read_tpr operation:
 #simulation_input = gmx.read_tpr([initial_tpr] * N)
 # Wait to broadcast until the next operation:
-simulation_input = gmx.read_tpr(initial_tpr)
+simulation_input = gmx.read_tpr(initial_tpr.output.file['-o'])
 
 # Array inputs imply array outputs.
 input_array = gmx.modify_input(
@@ -34,7 +33,6 @@ input_array = gmx.modify_input(
 
 md = gmx.mdrun(input_array)  # An array of simulations
 
-xvg_data = gmx.OutputFile('.xvg')
 rmsf = gmx.commandline_operation(
     'gmx',
     'rmsf',
@@ -42,8 +40,8 @@ rmsf = gmx.commandline_operation(
         '-f': md.output.trajectory,
         '-s': initial_tpr
     },
-    output={'-o': xvg_data})
-output_files = gmx.gather(xvg_data.filename)
+    output={'-o': gmx.OutputFile('.xvg')})
+output_files = gmx.gather(rmsf.output.file['-o'])
 gmx.run()
 
 print('Output file list:')
