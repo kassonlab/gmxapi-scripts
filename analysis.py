@@ -16,14 +16,21 @@ class MSMAnalyzer:
     """
     Builds msm from gmxapi output trajectory
     """
-    def __init__(self, topfile, trajectory):
+    def __init__(self, topfile, trajectory, P):
         feat = coor.featurizer(topfile)
-        X = coord.load(trajectory, feat)
-        Y = coord.tica(X, dim=2).get_output()
+        X = coor.load(trajectory, feat)
+        Y = coor.tica(X, dim=2).get_output()
         self.k_means = coor.cluster_kmeans(Y)
-    def is_converged():
-        # Question: how do I make P and Q persist in the subgraph? These are
-        # transition matrices in the n and n-1 iterations
-        return (relative_entropy(P,Q) < tol)
+        self.Q = P
+        self.P = new_msm_transition_matrix
+    def is_converged(self):
+        # Q = n-1 transition matrix, P = n transition matrix
+        Q = self.Q
+        return (relative_entropy(self.P, self.Q) < tol)
+    def transition_matrix(self):
+        return self.P
 
-msm_analyzer = gmx.operation.make_operation(MSMAnalyzer, input=['topfile', 'trajectory'])
+msm_analyzer = gmx.operation.make_operation(MSMAnalyzer,
+input=['topfile', 'trajectory', 'P'],
+output=['is_converged', 'transition_matrix']
+)
