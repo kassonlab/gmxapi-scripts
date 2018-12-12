@@ -2,10 +2,11 @@
 New DEER incorporation workflow in gmxapi
 """
 
-import gmx
-import myplugin  # Custom potential
-import analysis
+import json
 
+import gmx
+import myplugin  # Custom potentials
+import analysis
 
 # Add a TPR-loading operation to the default work graph (initially empty) that
 # produces simulation input data bundle (parameters, structure, topology)
@@ -14,6 +15,9 @@ N = 50  # Number of ensemble members
 starting_structure = 'input_conf.gro' # Could start with a list of distinct tprs
 topology_file = 'input.top'
 run_parameters = 'params.mdp'
+potential_parameters = 'myparams.json'
+with open(potential_parameters, mode='r') as fh:
+    my_dict_params = json.load(fh)
 
 # make a single simulation input file
 initial_tpr = gmx.commandline_operation('gmx', 'grompp',
@@ -29,57 +33,43 @@ initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
 lengthened_input = gmx.modify_input(initial_input,
                                     parameters={'nsteps': 50000000})
 
-# Create subgraph objects that  encapsulate multiple operations
+# Create subgraph objects that encapsulate multiple operations
 # and can be used in conditional and loop operations.
+# For subgraphs, inputs can be accessed as variables (not standard input/output)
+# and are copied to the next iteration.
 train = gmx.subgraph(input={'conformation': initial_input})
-converge = gmx.subgraph(input={'conformation'})
 
 with train:
+    training_potential = myplugin.training_restraint('training_restraint',
+                                                     params=my_dict_params)
     modified_input = gmx.modify_input(input=initial_input,
-    structure=train.input.conformation)
-    md = gmx.mdrun(input=initial_input)
-    potential = gmx.workflow.WorkElement(
-                namespace="myplugin",
-                operation="training_restraint",
-                depends=[],
-                params=my_dict_params)
-    potential.name = 'training'
-    # you can add multiple restraints by adding work elements
-
-    md.add_dependency(myplugin)
-    # is there even going to be a gmx.context? What the heck is the context
-    # really though? Why should I be retrieving a potential from it, and how
-    # to explain if someone is really intersted in this??
-    train_condition = analysis.training_analyzer(gmx.context.potentials['alpha'])
+                                      structure=train.conformation)
+    md = gmx.mdrun(input=modified_input, potential=training_potential)
+    # Alternate syntax to facilitate adding multiple potentials:
+    # md.interface.potential.apend(training_potential)
+    train_condition = analysis.training_analyzer(training_potential.output.alpha)
+    train.conformation = md.output.conformation
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
 my_loop = gmx.while_loop(gmx.logical_not(train_condition.is_converged), train)
-my_dict_params['alpha'] = gmx.context.potentials['alpha']
+
+# in this particular application, we "roll back" to the initial input
+converge = gmx.subgraph(input={'conformation': initial_input})
 
 with converge:
-    # Should this really be done through subgraphs?? I need the output of
-    # one to go to the output of another so maybe, except NOT the output of
-    # train -> converge, only converge -> production
-    modified_input = gmx.modify_input(input=initial_input,
-    structure=train.input.conformation)
-    md = gmx.mdrun(input=initial_input)
-    potential = gmx.workflow.WorkElement(
-                namespace="myplugin",
-                operation="converge_restraint",
-                depends=[],
-                params=my_dict_params)
-    converge_condition = analysis.converge_anlayzer(gmx.context.potential.distances)
-    # gmx.context.potential.distances seems goofy. Could do commandline?
+  modified_input = gmx.modify_input(input=initial_input,
+                                    structure=converge.input.conformation)
+    converging_potential = myplugin.converge_restraint(params=training_potential.output)
+    converge_condition = analysis.converge_analyzer(converging_potential.output.distances)
+    md = gmx.mdrun(input=modified_input, potential=converging_potential)
 
-with production:
-    modified_input = gmx.modify_input(input=initial_input,
-    structure=converge.output.conformation)
-    md = gmx.mdrun(input=initial_input)
-    potential = gmx.workflow.WorkElement(
-                namespace="myplugin",
-                operation="production_restraint",
-                depends=[],
-                params=my_dict_params)
+production_input = gmx.modify_input(input=initial_input,
+                                    structure=converge.output.conformation)
+prod_potential = myplugin.production_restraint(params=converging_potential.output)
+prod_md = gmx.mdrun(input=production_input, potential=prod_potential)
 
 gmx.run()
+
+print('Final alpha value was {}'.format(training_potential.output.alpha.extract()))
+# also can extract conformation filenames, etc.
