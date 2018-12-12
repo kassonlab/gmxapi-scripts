@@ -53,6 +53,6 @@ with subgraph:
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
-my_loop = gmx.while_loop(gmx.logical_not(adaptive_msm.output.is_converged), subgraph)
+my_loop = gmx.while_loop(gmx.logical_not(subgraph.adaptive_msm.output.is_converged), subgraph)
 
 gmx.run()
