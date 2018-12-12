@@ -46,7 +46,7 @@ with train:
                                       structure=train.conformation)
     md = gmx.mdrun(input=modified_input, potential=training_potential)
     # Alternate syntax to facilitate adding multiple potentials:
-    # md.interface.potential.apend(training_potential)
+    # md.interface.potential.add(training_potential)
     train_condition = analysis.training_analyzer(training_potential.output.alpha)
     train.conformation = md.output.conformation
 
