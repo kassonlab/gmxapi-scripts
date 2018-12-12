@@ -27,7 +27,7 @@ simulation_input = gmx.read_tpr(initial_tpr)
 
 # Array inputs imply array outputs.
 input_array = gmx.modify_input(simulation_input,
-                               params={'taut-t': list(range(50)) / 10.0}
+                               params={'tau-t': list(range(50)) / 10.0}
                                )
 
 md = gmx.mdrun(input_array)  # An array of simulations
