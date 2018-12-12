@@ -37,7 +37,7 @@ lengthened_input = gmx.modify_input(initial_input,
 # and can be used in conditional and loop operations.
 # For subgraphs, inputs can be accessed as variables (not standard input/output)
 # and are copied to the next iteration.
-train = gmx.subgraph(input={'conformation': initial_input})
+train = gmx.subgraph(variables={'conformation': initial_input})
 
 with train:
     training_potential = myplugin.training_restraint('training_restraint',
@@ -56,7 +56,7 @@ train_loop = gmx.while_loop(gmx.logical_not(train.train_condition.is_converged),
                             train)
 
 # in this particular application, we "roll back" to the initial input
-converge = gmx.subgraph(input={'conformation': initial_input})
+converge = gmx.subgraph(variables={'conformation': initial_input})
 
 with converge:
   modified_input = gmx.modify_input(input=initial_input,

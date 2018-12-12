@@ -21,7 +21,7 @@ initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
 
 # Get a placeholder object that can serve as a sub context / work graph owner
 # and can be used in a control operation.
-subgraph = gmx.subgraph(input={'conformation': initial_input})
+subgraph = gmx.subgraph(variables={'conformation': initial_input})
 
 with subgraph:
     modified_input = gmx.modify_input(
