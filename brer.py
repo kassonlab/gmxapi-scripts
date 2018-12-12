@@ -52,20 +52,24 @@ with train:
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
-my_loop = gmx.while_loop(gmx.logical_not(train_condition.is_converged), train)
+train_loop = gmx.while_loop(gmx.logical_not(train.train_condition.is_converged),
+                            train)
 
 # in this particular application, we "roll back" to the initial input
 converge = gmx.subgraph(input={'conformation': initial_input})
 
 with converge:
   modified_input = gmx.modify_input(input=initial_input,
-                                    structure=converge.input.conformation)
+                                    structure=converge.conformation)
     converging_potential = myplugin.converge_restraint(params=training_potential.output)
     converge_condition = analysis.converge_analyzer(converging_potential.output.distances)
     md = gmx.mdrun(input=modified_input, potential=converging_potential)
+conv_loop = gmx.while_loop(gmx.logical_not(converge.converge_condition.is_converged),
+                           converge)
+
 
 production_input = gmx.modify_input(input=initial_input,
-                                    structure=converge.output.conformation)
+                                    structure=converge.conformation)
 prod_potential = myplugin.production_restraint(params=converging_potential.output)
 prod_md = gmx.mdrun(input=production_input, potential=prod_potential)
 
