@@ -27,13 +27,11 @@ with subgraph:
     modified_input = gmx.modify_input(
         input=initial_input, structure=subgraph.conformation)
     md = gmx.mdrun(input=modified_input)
-    # Assume the existence of a more integrated gmx.trajcat operation
-    cluster = gmx.command_line(
-        'gmx', 'cluster', input=gmx.reduce(gmx.trajcat, md.output.trajectory))
-    # rmsd = gmx.command_line(
-    #     'gmx', 'rmsdist', input=gmx.reduce(gmx.trajcat, md.output.trajectory))
-    condition = analysis.cluster_analyzer(
-        input=cluster.output.file["-cl"])
+    # Get the output trajectories and pass to PyEmma to build the MSM
+    # Return a stop condition object that can be used in gmx while loop to
+    # terminate the simulation
+    condition = analysis.msm_analyzer(topfile=md.modified_input.file['tpr'],
+        trajectory=md.output.file['trajectory'])
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
