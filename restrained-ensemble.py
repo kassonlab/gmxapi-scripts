@@ -64,7 +64,7 @@ with converge:
     converge.pair_distance1 = potential1.output.pair_distance
     converge.pair_distance2 = potential2.output.pair_distance
 
-work = gmx.while_loop(condition=condition, converge)
+work = gmx.while_loop(condition=converge.condition, converge)
 
 # Command-line arguments for mdrun can be added to gmx run as below.
 # Settings for a 20 core HPC node. Use 18 threads for domain decomposition for pair potentials
