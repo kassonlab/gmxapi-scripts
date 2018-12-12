@@ -15,21 +15,57 @@ import sys
 import gmx
 import myplugin
 
-# The user has already built 20 input files in 20 directories.
-size = 20
-input_dir_list = ['aa_{:02d}'.format(i) for i in range(size)]
-tpr_list = [os.path.abspath(os.path.join(directory, 'mRMR.tpr')) for directory in input_dir_list]
+# The user has already built 20 input files in 20 directories for an ensemble of width 20.
+N = 100
+starting_structure = 'input_conf.gro' # Could start with a list of distinct confs
+topology_file = 'input.top'
+run_parameters = 'params.mdp'
+
+initial_tpr = gmx.commandline_operation('gmx', 'grompp',
+                                        input={'-f': run_parameters,
+                                        '-p': topology_file,
+                                        '-c': starting_structure})
+initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
 
 restraint1_params = 'params1.json'
 restraint2_params = 'params2.json'
 
-potential1 = myplugin.ensemble_restraint('ensemble_restraint_1', params=restraint1_params)
-potential2 = myplugin.ensemble_restraint('ensemble_restraint_2', params=restraint2_params)
 
-md = gmx.mdrun(gmx.read_tpr(tpr_list))
-md.interface.potential.add(potential1)
-md.interface.potential.add(potential2)
+# The pair-distance histogram for a single pair is `nbins` wide in each ensemble
+# member between iterations, and is broadcast to `N` instances when the potential
+# is bound to the mdrun operation.
+converge = gmx.subgraph(variables={'pair_distance1': gmx.gather([0.] * restraint1_params['nbins']),
+                                    'pair_distance2': gmx.gather([0.] * restraint2_params['nbins'])})
+
+# To do: `pair_distance1 = gmx.NDArray(shape=(restraint1_params['nbins'],), [0.] * restraint1_params['nbins'])`
+
+with converge:
+    # ensemble_restraint is implemented using gmxapi ensemble allReduce operations
+    # that do not need to be expressed in this procedural interface.
+    potential1 = myplugin.ensemble_restraint('ensemble_restraint_1',
+                                             params=restraint1_params,
+                                             input={'pair_distance': converge.pair_distance1})
+    potential2 = myplugin.ensemble_restraint('ensemble_restraint_2',
+                                             params=restraint2_params,
+                                             input={'pair_distance': converge.pair_distance2})
+
+    md = gmx.mdrun(gmx.read_tpr(tpr_list))
+    md.interface.potential.add(potential1)
+    md.interface.potential.add(potential2)
+
+    # Compare the distribution from the current iteration to the experimental data and look for a threshold of low J-S divergence
+    # We perform the calculation using all of the ensemble data.
+    js_1 = calculate_js(input={'params': restraint1_params,
+                        'simulation_distances': gmx.gather(potential1.output.pair_distance)})
+    js_2 = calculate_js(input={'params': restraint2_params,
+                        'simulation_distances': gmx.gather(potential2.output.pair_distance)})
+    condition = gmx.logical_and(js_1.is_converged, js_2.is_converged)
+
+    converge.pair_distance1 = potential1.output.pair_distance
+    converge.pair_distance2 = potential2.output.pair_distance
+
+work = gmx.while_loop(condition=condition, converge)
 
 # Settings for a 20 core HPC node. Use 18 threads for domain decomposition for pair potentials
 # and the remaining 2 threads for PME electrostatics.
-gmx.run(md, tmpi=20, grid=[3, 3, 2], ntomp_pme=1, npme=2, ntomp=1)
+gmx.run(work, tmpi=20, grid=[3, 3, 2], ntomp_pme=1, npme=2, ntomp=1)
