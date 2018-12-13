@@ -43,7 +43,7 @@ with subgraph:
                                           output={'-o': gmx.OutputFile('.trr')})
 
     adaptive_msm = analysis.msm_analyzer(topfile=editconf.file['-o'],
-        trajectory=allframes.output.file['-o']
+        trajectory=allframes.output.file['-o'],
         P=subgraph.P)
     # Update the persistent data for the subgraph
     subgraph.P = adaptive_msm.output.transition_matrix
