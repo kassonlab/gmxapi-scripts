@@ -5,10 +5,8 @@ class CalculateJS:
     def __init__(self, params=None, simulation_distances=None):
         """ Do JS-Div calculation """
 
-        _, simulation_histogram = np.histogram(
-            simulation_distances, bins=restraint_params['bins'])
         self.js = js_calculation(restraint_params['DEER'],
-                                 simulation_histogram)
+                                 simulation_distances)
 
     def is_converged(self):
         return self.js < tol
