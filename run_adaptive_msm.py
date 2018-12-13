@@ -28,7 +28,7 @@ editconf = gmx.commandline_operation('gmx', 'editconf',
 # and can be used in a control operation.
 subgraph = gmx.subgraph(variables={
                             'conformation': initial_input,
-                            'P': gmx.MDArray([0.], (N, N))
+                            'P': gmx.MDArray(0., (N, N))
                             })
 
 with subgraph:
