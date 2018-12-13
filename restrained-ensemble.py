@@ -14,6 +14,7 @@ import sys
 
 import gmx
 import myplugin
+from analysis import calculate_js
 
 # The user has already built 20 input files in 20 directories for an ensemble of width 20.
 N = 100
@@ -47,7 +48,7 @@ with converge:
                                              params=restraint2_params,
                                              input={'pair_distance': converge.pair_distance2})
 
-    md = gmx.mdrun(gmx.read_tpr(tpr_list))
+    md = gmx.mdrun(gmx.read_tpr(initial_input))
     md.interface.potential.add(potential1)
     md.interface.potential.add(potential2)
 
