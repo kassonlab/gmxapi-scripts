@@ -28,7 +28,7 @@ initial_tpr = gmx.commandline_operation(
         '-p': topology_file,
         '-c': starting_structure
     })
-initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
+initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr, N))  # An array of simulations
 
 # just to demonstrate gmxapi functionality, modify a parameter here
 # changed parameters with width 1 on an ensemble with width 50

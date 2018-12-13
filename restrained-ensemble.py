@@ -25,7 +25,7 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         input={'-f': run_parameters,
                                         '-p': topology_file,
                                         '-c': starting_structure})
-initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
+initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr,  N))  # An array of simulations
 
 restraint1_params = 'params1.json'
 restraint2_params = 'params2.json'
@@ -34,10 +34,8 @@ restraint2_params = 'params2.json'
 # The pair-distance histogram for a single pair is `nbins` wide in each ensemble
 # member between iterations, and is broadcast to `N` instances when the potential
 # is bound to the mdrun operation.
-converge = gmx.subgraph(variables={'pair_distance1': gmx.gather([0.] * restraint1_params['nbins']),
-                                    'pair_distance2': gmx.gather([0.] * restraint2_params['nbins'])})
-
-# To do: `pair_distance1 = gmx.NDArray(shape=(restraint1_params['nbins'],), [0.] * restraint1_params['nbins'])`
+converge = gmx.subgraph(variables={'pair_distance1': gmx.MDArray(0., restraint1_params['nbins']),
+                                    'pair_distance2': gmx.MDArray(0., restraint2_params['nbins'])})
 
 with converge:
     # ensemble_restraint is implemented using gmxapi ensemble allReduce operations

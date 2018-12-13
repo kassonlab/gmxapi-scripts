@@ -19,11 +19,11 @@ initial_tpr = gmx.commandline_operation(
     },
     output={'-o': gmx.OutputFile('.tpr')})
 # Note: Before gmx.OutputFile, users still have to manage filenames
-# The above would have `output={'-o': [initial_tpr] * N}`
+# The above would have `output={'-o': gmx.MDArray(initial_tpr,  N)}`
 
 # Note: initial_tpr has a single output that can be automatically broadcast now or later.
 # Broadcast to the read_tpr operation:
-#simulation_input = gmx.read_tpr([initial_tpr] * N)
+#simulation_input = gmx.read_tpr(gmx.MDArray(initial_tpr,  N))
 # Wait to broadcast until the next operation:
 simulation_input = gmx.read_tpr(initial_tpr.output.file['-o'])
 
