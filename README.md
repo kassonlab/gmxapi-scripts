@@ -1,3 +1,3 @@
 # gmxapi-scripts
 
-Sample scripts for running "workflows" in gmxapi.
+Sample scripts for running some high-level tasks including ensemble simulation in gmxapi.
