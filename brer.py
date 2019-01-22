@@ -41,49 +41,70 @@ lengthened_input = gmx.modify_input(
 
 # Create subgraph objects that encapsulate multiple operations
 # and can be used in conditional and loop operations.
-# For subgraphs, inputs can be accessed as variables (not standard input/output)
-# and are copied to the next iteration.
-train = gmx.subgraph(variables={'conformation': initial_input})
+# For subgraphs, inputs can be accessed as variables and are copied to the next
+# iteration (not typical for gmxapi operation input/output).
+train = gmx.subgraph(variables={'conformation': initial_input,
+                                'is_converged': False,
+                                'training_potential': None,
+                                }
+                     )
 
+# References to the results of operations know which (sub)graph they live in.
+# The `with` block activates and deactivates the scope of the subgraph in order
+# to constrain the section of this script in which references are valid.
+# Otherwise, a user could mistakenly use a reference that only points to the
+# result of the first iteration of a "while" loop. If the `with` block succeeds,
+# then the outputs of `train` are afterwards fully specified.
 with train:
-    training_potential = myplugin.training_restraint(
-        'training_restraint', params=my_dict_params)
+    train.training_potential = myplugin.training_restraint(
+        params=my_dict_params)
     modified_input = gmx.modify_input(
         input=initial_input, structure=train.conformation)
-    md = gmx.mdrun(input=modified_input, potential=training_potential)
+    md = gmx.mdrun(input=modified_input, potential=train.training_potential)
     # Alternate syntax to facilitate adding multiple potentials:
-    # md.interface.potential.apend(training_potential)
-    train_condition = brer_tools.training_analyzer(
-        training_potential.output.alpha)
+    # md.interface.potential.add(train.training_potential)
+    train.is_converged = brer_tools.training_analyzer(
+        train.training_potential.output.alpha)
     train.conformation = md.output.conformation
+# At the end of the `with` block, `train` is no longer the active graph, and
+# gmx.exceptions.ScopeError will be raised if `modified_input`, or `md` are used
+# in other graph scopes (without first reassigning, of course)
+# More discussion at https://github.com/kassonlab/gmxapi/issues/205
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
 train_loop = gmx.while_loop(
-    gmx.logical_not(train.train_condition.is_converged), train)
+    operation=train,
+    condition=gmx.logical_not(train.is_converged))
 
 # in this particular application, we "roll back" to the initial input
-converge = gmx.subgraph(variables={'conformation': initial_input})
+converge = gmx.subgraph(variables={'conformation': initial_input,
+                                   'is_converged': False,
+                                   'converging_potential': None,
+                                   }
+                        )
 
 with converge:
     modified_input = gmx.modify_input(
         input=initial_input, structure=converge.conformation)
-    converging_potential = myplugin.converge_restraint(
-        params=training_potential.output)
-    converge_condition = brer_tools.converge_analyzer(
-        converging_potential.output.distances)
-    md = gmx.mdrun(input=modified_input, potential=converging_potential)
+    converge.converging_potential = myplugin.converge_restraint(
+        params=train_loop.training_potential.output)
+    converge.is_converged = brer_tools.converge_analyzer(
+        converge.converging_potential.output.distances)
+    md = gmx.mdrun(input=modified_input, potential=converge.converging_potential)
+
 conv_loop = gmx.while_loop(
-    gmx.logical_not(converge.converge_condition.is_converged), converge)
+    operation=converge,
+    condition=gmx.logical_not(converge.is_converged))
 
 production_input = gmx.modify_input(
     input=initial_input, structure=converge.conformation)
 prod_potential = myplugin.production_restraint(
-    params=converging_potential.output)
+    params=converge.converging_potential.output)
 prod_md = gmx.mdrun(input=production_input, potential=prod_potential)
 
 gmx.run()
 
 print('Final alpha value was {}'.format(
-    training_potential.output.alpha.extract()))
+    train_loop.training_potential.output.alpha.extract()))
 # also can extract conformation filenames, etc.
