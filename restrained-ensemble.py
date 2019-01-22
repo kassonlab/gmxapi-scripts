@@ -11,6 +11,7 @@ DOI: `10.1093/bioinformatics/bty484 <https://doi.org/10.1093/bioinformatics/bty4
 
 import os
 import sys
+import json
 
 import gmx
 import myplugin
@@ -28,9 +29,10 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         '-c': starting_structure})
 initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr,  N))  # An array of simulations
 
-restraint1_params = 'params1.json'
-restraint2_params = 'params2.json'
-
+with open('params1.json', 'r') as fh:
+    restraint1_params = json.load(fh)
+with open('params2.json', 'r') as fh:
+    restraint2_params = json.load(fh)
 
 # The pair-distance histogram for a single pair is `nbins` wide in each ensemble
 # member between iterations, and is broadcast to `N` instances when the potential

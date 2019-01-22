@@ -21,7 +21,7 @@ initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr, N))  # An array of simulat
 
 # We will need a pdb for MSM building in PyEmma
 editconf = gmx.commandline_operation('gmx', 'editconf',
-    inputs={'-f': starting_structure}
+    inputs={'-f': starting_structure},
     output={'-o': gmx.OutputFile('.pdb')})  # 'input_conf.pdb'
 
 # Get a placeholder object that can serve as a sub context / work graph owner
