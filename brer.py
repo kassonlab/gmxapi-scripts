@@ -6,7 +6,7 @@ import json
 
 import gmx
 import myplugin  # Custom potentials
-import analysis
+import brer_tools
 
 # Add a TPR-loading operation to the default work graph (initially empty) that
 # produces simulation input data bundle (parameters, structure, topology)
@@ -51,7 +51,7 @@ with train:
     md = gmx.mdrun(input=modified_input, potential=training_potential)
     # Alternate syntax to facilitate adding multiple potentials:
     # md.interface.potential.apend(training_potential)
-    train_condition = analysis.training_analyzer(
+    train_condition = brer_tools.training_analyzer(
         training_potential.output.alpha)
     train.conformation = md.output.conformation
 
@@ -68,7 +68,7 @@ with converge:
         input=initial_input, structure=converge.conformation)
     converging_potential = myplugin.converge_restraint(
         params=training_potential.output)
-    converge_condition = analysis.converge_analyzer(
+    converge_condition = brer_tools.converge_analyzer(
         converging_potential.output.distances)
     md = gmx.mdrun(input=modified_input, potential=converging_potential)
 conv_loop = gmx.while_loop(
