@@ -27,7 +27,7 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         input={'-f': run_parameters,
                                         '-p': topology_file,
                                         '-c': starting_structure})
-initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr,  N))  # An array of simulations
+initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
 
 with open('params1.json', 'r') as fh:
     restraint1_params = json.load(fh)
@@ -37,8 +37,11 @@ with open('params2.json', 'r') as fh:
 # The pair-distance histogram for a single pair is `nbins` wide in each ensemble
 # member between iterations, and is broadcast to `N` instances when the potential
 # is bound to the mdrun operation.
-converge = gmx.subgraph(variables={'pair_distance1': gmx.MDArray(0., restraint1_params['nbins']),
-                                    'pair_distance2': gmx.MDArray(0., restraint2_params['nbins'])})
+# NDArray syntax in Python is based on numpy user interfaces.
+converge = gmx.subgraph(
+    variables={'pair_distance1': gmx.NDArray(0., shape=restraint1_params['nbins']),
+               'pair_distance2': gmx.NDArray(0., shape=restraint2_params['nbins'])}
+)
 
 with converge:
     # ensemble_restraint is implemented using gmxapi ensemble allReduce operations
@@ -70,4 +73,4 @@ work = gmx.while_loop(converge.condition, converge)
 # Command-line arguments for mdrun can be added to gmx run as below.
 # Settings for a 20 core HPC node. Use 18 threads for domain decomposition for pair potentials
 # and the remaining 2 threads for PME electrostatics.
-gmx.run(work, tmpi=20, grid=[3, 3, 2], ntomp_pme=1, npme=2, ntomp=1)
+gmx.run(work, tmpi=20, grid=gmx.NDArray([3, 3, 2]), ntomp_pme=1, npme=2, ntomp=1)

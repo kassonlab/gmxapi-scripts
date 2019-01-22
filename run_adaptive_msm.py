@@ -17,7 +17,8 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         input={'-f': run_parameters,
                                         '-p': topology_file,
                                         '-c': starting_structure})
-initial_input = gmx.load_tpr(gmx.MDArray(initial_tpr, N))  # An array of simulations
+# Set up an array of N simulations, starting from a single input.
+initial_input = gmx.load_tpr([initial_tpr] * N)
 
 # We will need a pdb for MSM building in PyEmma
 editconf = gmx.commandline_operation('gmx', 'editconf',
@@ -28,7 +29,7 @@ editconf = gmx.commandline_operation('gmx', 'editconf',
 # and can be used in a control operation.
 subgraph = gmx.subgraph(variables={
                             'conformation': initial_input,
-                            'P': gmx.MDArray(0., (N, N))
+                            'P': gmx.NDArray(0., shape=(N, N))
                             })
 
 with subgraph:
