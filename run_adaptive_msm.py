@@ -29,7 +29,8 @@ editconf = gmx.commandline_operation('gmx', 'editconf',
 # and can be used in a control operation.
 subgraph = gmx.subgraph(variables={
                             'conformation': initial_input,
-                            'P': gmx.NDArray(0., shape=(N, N))
+                            'P': gmx.NDArray(0., shape=(N, N)),
+                            'is_converged': False,
                             })
 
 with subgraph:
@@ -50,9 +51,10 @@ with subgraph:
     subgraph.P = adaptive_msm.output.transition_matrix
     # adaptive_msm here is responsible for maintaining the ensemble width
     subgraph.conformation = adaptive_msm.output.conformation
+    subgraph.is_converged = adaptive_msm.output.is_converged
 
 # In the default work graph, add a node that depends on `condition` and
 # wraps subgraph.
-my_loop = gmx.while_loop(gmx.logical_not(subgraph.adaptive_msm.output.is_converged), subgraph)
+my_loop = gmx.while_loop(operation=subgraph, condition=gmx.logical_not(subgraph.is_converged))
 
 gmx.run()
