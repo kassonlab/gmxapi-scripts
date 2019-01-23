@@ -27,7 +27,7 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         input={'-f': run_parameters,
                                         '-p': topology_file,
                                         '-c': starting_structure})
-initial_input = gmx.load_tpr([initial_tpr] * N)  # An array of simulations
+initial_input = gmx.load_tpr([initial_tpr for _ in range(N)])  # An array of simulations
 
 with open('params1.json', 'r') as fh:
     restraint1_params = json.load(fh)

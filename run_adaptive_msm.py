@@ -18,7 +18,7 @@ initial_tpr = gmx.commandline_operation('gmx', 'grompp',
                                         '-p': topology_file,
                                         '-c': starting_structure})
 # Set up an array of N simulations, starting from a single input.
-initial_input = gmx.load_tpr([initial_tpr] * N)
+initial_input = gmx.load_tpr([initial_tpr for _ in range(N)])
 
 # We will need a pdb for MSM building in PyEmma
 editconf = gmx.commandline_operation('gmx', 'editconf',
