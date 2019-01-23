@@ -15,7 +15,7 @@ import json
 
 import gmx
 import myplugin
-from restrained-md-analysis import calculate_js
+from restrained_md_analysis import calculate_js
 
 # The user has already built 20 input files in 20 directories for an ensemble of width 20.
 N = 100

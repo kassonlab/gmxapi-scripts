@@ -13,10 +13,10 @@ a range of user tasks.
 BRER simulation-analysis protocol implemented as a gmxapi script, with a Python analysis
  module (`brer_tools.py` not implemented here) and C++ MD extension code (`myplugin.so` also not shown).
 
-### `restrained-ensemble.py`
+### `restrained_ensemble.py`
 
 Restrained ensemble example script using restraint potentials implemented in `myplugin` (not shown) and analysis code
- expressed in `restrained-md-analysis.py`.
+ expressed in `restrained_md_analysis.py`.
 
 ### `rmsf.py`
 
