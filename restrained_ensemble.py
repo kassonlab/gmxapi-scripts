@@ -44,7 +44,7 @@ converge = gmx.subgraph(
                }
 )
 
-with converge:
+with converge.pair_distance1 as pair_distance1, converge.pair_distance2 as pair_distance2:
     # ensemble_restraint is implemented using gmxapi ensemble allReduce operations
     # that do not need to be expressed in this procedural interface.
     potential1 = myplugin.ensemble_restraint(label='ensemble_restraint_1',
@@ -66,8 +66,8 @@ with converge:
                         'simulation_distances': gmx.gather(potential2.output.pair_distance)})
     gmx.logical_and(js_1.is_converged, js_2.is_converged, label='is_converged')
 
-    converge.pair_distance1 = potential1.output.pair_distance
-    converge.pair_distance2 = potential2.output.pair_distance
+    pair_distance1 = potential1.output.pair_distance
+    pair_distance2 = potential2.output.pair_distance
 
 work = gmx.while_loop(operation=converge, condition=gmx.logical_not(converge.is_converged))
 
