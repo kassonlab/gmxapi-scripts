@@ -105,5 +105,5 @@ prod_md = gmx.mdrun(input=production_input, potential=prod_potential)
 gmx.run()
 
 print('Final alpha value was {}'.format(
-    train_loop.training_potential.output.alpha.extract()))
+    train_loop.training_potential.output.alpha.result()))
 # also can extract conformation filenames, etc.
