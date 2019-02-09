@@ -45,4 +45,4 @@ output_files = gmx.gather(rmsf.output.file['-o'])
 gmx.run()
 
 print('Output file list:')
-print(', '.join(output_files.extract()))
+print(', '.join(output_files.result()))
