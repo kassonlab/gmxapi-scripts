@@ -17,13 +17,13 @@ initial_tpr = gmx.commandline_operation(
         '-c': starting_structure,
         '-p': topology_file
     },
-    output={'-o': gmx.OutputFile('.tpr')})
-# Note: Before gmx.OutputFile, users still have to manage filenames
-# The above would have `output={'-o': gmx.MDArray(initial_tpr,  N)}`
+    output={'-o': gmx.File(suffix='.tpr')})
+# Note: Before gmx.File, users still have to manage filenames
+# The above would have `output={'-o': [initial_tpr for _ in range(N)]}`
 
 # Note: initial_tpr has a single output that can be automatically broadcast now or later.
 # Broadcast to the read_tpr operation:
-#simulation_input = gmx.read_tpr(gmx.MDArray(initial_tpr,  N))
+#simulation_input = gmx.read_tpr([initial_tpr for _ in range(N)])
 # Wait to broadcast until the next operation:
 simulation_input = gmx.read_tpr(initial_tpr.output.file['-o'])
 
@@ -40,7 +40,7 @@ rmsf = gmx.commandline_operation(
         '-f': md.output.trajectory,
         '-s': initial_tpr
     },
-    output={'-o': gmx.OutputFile('.xvg')})
+    output={'-o': gmx.File(suffix='.xvg')})
 output_files = gmx.gather(rmsf.output.file['-o'])
 gmx.run()
 
