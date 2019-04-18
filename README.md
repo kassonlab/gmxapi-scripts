@@ -2,9 +2,14 @@
 
 Sample scripts for running some high-level tasks including ensemble simulation in gmxapi.
 
-These scripts demonstrate current and near-term planned functionality.  
-They are not extensively documented yet but are intended to show how the API will enable 
-a range of user tasks.
+These scripts demonstrate current and near-term planned functionality under subtasks of 
+GROMACS issue [2045](https://redmine.gromacs.org/issues/2045)
+and as outlined in the 
+[roadmap](https://redmine.gromacs.org/projects/gromacs/repository/revisions/master/entry/python_packaging/roadmap.rst)
+
+The general syntax for the gmxapi user interface in GROMACS 2020 will be finalized by about May 1, 2019.
+Please note feedback, questions, and concerns in the [Issues](https://github.com/kassonlab/gmxapi-scripts/issues)
+or to issues@gmxapi.org.
 
 ## Examples
 
