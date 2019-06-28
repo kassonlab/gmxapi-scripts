@@ -1,5 +1,7 @@
 """
 New DEER incorporation workflow in gmxapi
+
+Reference: Hays, Cafiso, Kasson. J. Phys. Chem. Lett. 2019 10(12): 3410-3414, doi:10.1021/acs.jpclett.9b01407
 """
 
 import json
