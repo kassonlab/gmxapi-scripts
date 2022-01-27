@@ -2,7 +2,9 @@
 
 Sample scripts for running some high-level tasks including ensemble simulation in gmxapi.
 
-These scripts demonstrate current and near-term planned functionality under subtasks of 
+### As of 2022, we recommend using https://github.com/kassonlab/gmxapi-tutorials as the entry point for learning and demonstrating gmxapi.
+
+These scripts demonstrate 2019 and planned functionality under subtasks of 
 GROMACS issue [2045](https://redmine.gromacs.org/issues/2045)
 and as outlined in the 
 [roadmap](https://redmine.gromacs.org/projects/gromacs/repository/revisions/master/entry/python_packaging/roadmap.rst)
